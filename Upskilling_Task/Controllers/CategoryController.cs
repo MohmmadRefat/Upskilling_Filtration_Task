@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Upskilling_Task.DTOs;
 using Upskilling_Task.Models;
 
 namespace Upskilling_Task.Controllers
@@ -19,7 +20,9 @@ namespace Upskilling_Task.Controllers
         [HttpGet]
         public IActionResult GetAllCategories()
         {
-            var categories = libraryContext.Categories.ToList();
+            
+            var categories = libraryContext.Categories.Select(c=> new CategoryDTO { Id=c.CategoryId,Name=c.Name,Description=c.Description}).ToList();
+            
             return Ok(categories);
         }
 
@@ -27,25 +30,36 @@ namespace Upskilling_Task.Controllers
         public IActionResult GetCategoryById(int id)
         {
             var category = libraryContext.Categories.FirstOrDefault(c => c.CategoryId == id);
+            CategoryDTO categoryDTO = new CategoryDTO
+            {
+                Id = category.CategoryId,
+                Name = category.Name,
+                Description=category.Description
+            };
             if (category == null)
                 return NotFound();
 
-            return Ok(category);
+            return Ok(categoryDTO);
         }
 
         [HttpPost]
-        public IActionResult AddCategory(Category category)
+        public IActionResult AddCategory(CreateCategoryDTO category)
         {
-            libraryContext.Categories.Add(category);
+            Category category1 = new Category
+            {   
+                Name = category.Name,
+                Description = category.Description
+            };
+            libraryContext.Categories.Add(category1);
             libraryContext.SaveChanges();
 
-            return CreatedAtAction(nameof(GetCategoryById), new { id = category.CategoryId }, category);
+            return CreatedAtAction(nameof(GetCategoryById), new { id = category1.CategoryId }, category1);
         }
 
         [HttpPut("{id:int}")]
-        public IActionResult UpdateCategory(int id, Category categoryFromRequest)
+        public IActionResult UpdateCategory(CategoryDTO categoryFromRequest)
         {
-            var categoryFromDB = libraryContext.Categories.FirstOrDefault(c => c.CategoryId == id);
+            var categoryFromDB = libraryContext.Categories.FirstOrDefault(c => c.CategoryId == categoryFromRequest.Id);
             if (categoryFromDB != null)
             {
 
@@ -66,6 +80,7 @@ namespace Upskilling_Task.Controllers
             var categoryFromDB = libraryContext.Categories.FirstOrDefault(c => c.CategoryId == id);
             if (categoryFromDB != null)
             {
+                
                 libraryContext.Categories.Remove(categoryFromDB);
                 libraryContext.SaveChanges();
                 return NoContent();

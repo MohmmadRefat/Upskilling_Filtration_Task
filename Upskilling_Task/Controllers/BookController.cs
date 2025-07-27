@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Upskilling_Task.DTOs;
 using Upskilling_Task.Models;
 
 [Route("api/[controller]")]
@@ -15,7 +16,13 @@ public class BookController : ControllerBase
     [HttpGet]
     public IActionResult GetAllBooks()
     {
-        var books = libraryContext.Books.ToList();
+
+        var books = libraryContext.Books.Select(B =>  new GetBooksDTO { Name = B.Name,
+                                                                        Description = B.Description,
+                                                                        Price = B.Price,
+                                                                        Author = B.Author,
+                                                                        BookId = B.BookId,
+                                                                        CategoryId = B.CategoryId }).ToList();
         return Ok(books);
     }
 
@@ -25,13 +32,32 @@ public class BookController : ControllerBase
         var book = libraryContext.Books.FirstOrDefault(b => b.BookId == id);
         if (book == null)
             return NotFound();
-
-        return Ok(book);
+        GetBooksDTO bookDTO = new GetBooksDTO
+        {
+            BookId = book.BookId,
+            Name = book.Name,
+            Description = book.Description,
+            Author = book.Author,
+            Price = book.Price,
+            Stock = book.Stock,
+            CategoryId = book.CategoryId
+        };
+        return Ok(bookDTO);
     }
 
     [HttpPost]
-    public IActionResult AddBook(Book book)
+    public IActionResult AddBook(BookDTO bookDTO)
     {
+        Book book= new Book
+        {
+            Name = bookDTO.Name,
+            Description = bookDTO.Description,
+            Author = bookDTO.Author,
+            Price = bookDTO.Price,
+            Stock = bookDTO.Stock,
+            CategoryId = bookDTO.CategoryId
+        };
+
         libraryContext.Books.Add(book);
         libraryContext.SaveChanges();
 
@@ -39,9 +65,9 @@ public class BookController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    public IActionResult UpdateBook(int id, Book bookFromRequest)
+    public IActionResult UpdateBook( GetBooksDTO bookFromRequest)
     {
-        Book? bookFromDB = libraryContext.Books.FirstOrDefault(D => D.BookId == id);
+        Book? bookFromDB = libraryContext.Books.FirstOrDefault(D => D.BookId == bookFromRequest.BookId);
         if (bookFromDB != null)
         {
 
@@ -51,6 +77,7 @@ public class BookController : ControllerBase
             bookFromDB.Author = bookFromRequest.Author;
             bookFromDB.Stock = bookFromRequest.Stock;
             bookFromDB.CategoryId = bookFromRequest.CategoryId;
+
             libraryContext.SaveChanges();
             return NoContent();
         }

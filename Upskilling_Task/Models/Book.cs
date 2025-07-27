@@ -14,9 +14,9 @@ namespace Upskilling_Task.Models
         [Range(0, double.MaxValue, ErrorMessage = "Stock must be a positive value.")]
         public int Stock { get; set; }
         [ForeignKey("Category")]
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
 
-        public Category Category { get; set; }
+        public Category? Category { get; set; }
 
 
     }
